@@ -1,3 +1,4 @@
+# coding=utf-8
 from __future__ import print_function
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
@@ -5,10 +6,10 @@ import io
 import codecs
 import os
 import sys
-
 import youtrackapipowerpack
 
 here = os.path.abspath(os.path.dirname(__file__))
+
 
 def read(*filenames, **kwargs):
     encoding = kwargs.get('encoding', 'utf-8')
@@ -19,7 +20,9 @@ def read(*filenames, **kwargs):
             buf.append(f.read())
     return sep.join(buf)
 
+
 long_description = read('README.md')
+
 
 class PyTest(TestCommand):
     def finalize_options(self):
@@ -31,6 +34,7 @@ class PyTest(TestCommand):
         import pytest
         errcode = pytest.main(self.test_args)
         sys.exit(errcode)
+
 
 setup(
     name='youtrackapipowerpack',
@@ -48,7 +52,7 @@ setup(
     include_package_data=True,
     platforms='any',
     test_suite='youtrackapipowerpack.test.test_youtrackapipowerpack',
-    classifiers = [
+    classifiers=[
         'Programming Language :: Python',
         'Development Status :: 4 - Beta',
         'Natural Language :: English',
@@ -59,7 +63,7 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
         'Topic :: Software Development :: Libraries :: Application Frameworks',
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
-        ],
+    ],
     extras_require={
         'testing': ['pytest'],
     }

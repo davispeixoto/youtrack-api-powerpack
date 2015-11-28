@@ -1,20 +1,21 @@
 # coding=utf-8
-__author__ = 'davis.peixoto'
-
 import subprocess
 
+__author__ = 'davis.peixoto'
 
-class gitutils(object):
+
+class GitUtils(object):
     cd = None
 
     def __init__(self):
         pass
 
-    def get_commit_string(self, path):
+    def get_commits_strings(self, path):
         pass
 
     def get_tags_list(self):
         pass
+
 
 
 proc_latest = subprocess.Popen("cd /home/davis.peixoto/projects/rentcars; git tag | sort --version-sort -r | head -n 1",
@@ -23,10 +24,10 @@ latest_tag = proc_latest.stdout.read()
 
 # from http://stackoverflow.com/questions/7353054/call-a-shell-command-containing-a-pipe-from-python-and-capture-stdout
 #
-#p1 = subprocess.Popen(["cat", "file.log"], stdout=subprocess.PIPE)
-#p2 = subprocess.Popen(["tail", "-1"], stdin=p1.stdout, stdout=subprocess.PIPE)
-#p1.stdout.close()  # Allow p1 to receive a SIGPIPE if p2 exits.
-#output,err = p2.communicate()
+# p1 = subprocess.Popen(["cat", "file.log"], stdout=subprocess.PIPE)
+# p2 = subprocess.Popen(["tail", "-1"], stdin=p1.stdout, stdout=subprocess.PIPE)
+# p1.stdout.close()  # Allow p1 to receive a SIGPIPE if p2 exits.
+# output,err = p2.communicate()
 
 proc_previous = subprocess.Popen(
     "cd /home/davis.peixoto/projects/rentcars; git tag | sort --version-sort -r | head -n 2 | tail -n 1",
