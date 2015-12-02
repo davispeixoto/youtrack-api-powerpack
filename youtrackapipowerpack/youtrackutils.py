@@ -23,3 +23,6 @@ class YoutrackUtils(object):
                     late.append(x)
 
         return late
+
+    def mark_as_deployed(self, issueid):
+        youtrack_connection.executeCommand("State Deployed")
