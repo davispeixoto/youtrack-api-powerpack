@@ -56,25 +56,24 @@ class DriverMandrill(object):
             # Parse options
             if len(options) > 0:
                 for option in options:
-                    if option[0] == 'template_name':
-                        template_name = option[1]
-                    elif option[0] == 'template_content':
-                        template_content = option[1]
-                    elif option[0] == 'ip_pool':
-                        ip_pool = option[1]
-                    elif option[0] == 'async':
-                        async = option[1]
-                    elif option[0] == 'send_at':
-                        send_at = option[1]
+                    if option == 'template_name':
+                        template_name = options[option]
+                    elif option == 'template_content':
+                        template_content = options[option]
+                    elif option == 'ip_pool':
+                        ip_pool = options[option]
+                    elif option == 'async':
+                        async = options[option]
+                    elif option == 'send_at':
+                        send_at = options[option]
                     else:
-                        message[option[0]] = option[1]
+                        message[option] = options[option]
 
             self.get_instance()
 
             if template_name is None and template_content is None:
                 result = self.mandrill_client.messages.send(message=message, async=async, ip_pool=ip_pool, send_at=send_at)
             else:
-                pass
                 result = self.mandrill_client.messages.send_template(template_name=template_name, template_content=template_content, message=message)
 
         except mandrill.Error, e:

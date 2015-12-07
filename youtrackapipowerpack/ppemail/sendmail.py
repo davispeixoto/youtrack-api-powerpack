@@ -5,12 +5,15 @@ __author__ = 'gabriel.pereira'
 
 
 class SendMail(object):
-    def __init__(self):
-        self.driver = settings.MAIL_DRIVER
+    def __init__(self, driver=None):
+        if driver is None:
+            self.driver = settings.MAIL_DRIVER
+        else:
+            self.driver = driver
         self.configure()
 
     def send_mail(self, from_email, to_email, subject, body, options=[]):
-            return self.dispatcher.send_mail(from_email, to_email, subject, body, options=[])
+            return self.dispatcher.send_mail(from_email, to_email, subject, body, options)
 
     def configure(self):
         if self.driver == 'smtp':
