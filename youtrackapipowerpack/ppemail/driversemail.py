@@ -2,10 +2,9 @@
 from HTMLParser import HTMLParser
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from html5lib.sanitizer import HTMLSanitizerMixin
 
 import mandrill
-from pip._vendor.html5lib.sanitizer import HTMLSanitizerMixin
-
 import settings
 
 __author__ = 'gabriel.pereira'
@@ -22,14 +21,15 @@ class DriverMandrill(object):
             import mandrill
             self.mandrill_client = mandrill.Mandrill(settings.MANDRIL_APIKEY)
 
-    def send_mail(self, from_email, to_email, subject, body, options=[]):
+    def send_mail(self, from_email, to_email, subject, body, options=None):
+        if not options:
+            options = []
         try:
             template_name = None
             template_content = None
             async = False
             ip_pool = None
             send_at = None
-            result = None
 
             if from_email is None or from_email == '':
                 from_email = settings.MAIL_FROM_ADDRESS
@@ -49,7 +49,7 @@ class DriverMandrill(object):
             elif isinstance(to_email, list):
                 message['to'] = to_email
             elif isinstance(to_email, basestring):
-                message['to'] = [{'email':to_email}]
+                message['to'] = [{'email': to_email}]
             else:
                 raise Exception('Unable to parse e-mail to')
 
@@ -72,9 +72,11 @@ class DriverMandrill(object):
             self.get_instance()
 
             if template_name is None and template_content is None:
-                result = self.mandrill_client.messages.send(message=message, async=async, ip_pool=ip_pool, send_at=send_at)
+                result = self.mandrill_client.messages.send(message=message, async=async,
+                                                            ip_pool=ip_pool, send_at=send_at)
             else:
-                result = self.mandrill_client.messages.send_template(template_name=template_name, template_content=template_content, message=message)
+                result = self.mandrill_client.messages.send_template(template_name=template_name,
+                                                                     template_content=template_content, message=message)
 
         except mandrill.Error, e:
             return dict(status='NOK', message='[ERROR] Problem to send mail with mandrill : ' + str(e))
@@ -89,7 +91,9 @@ class DriverSmtp(object):
     def __init__(self):
         self.config = None
 
-    def send_mail(self, from_email, to_email, subject, body, options=[]):
+    def send_mail(self, from_email, to_email, subject, body, options=None):
+        if not options:
+            options = []
         try:
             if from_email is None or from_email == '':
                 from_email = settings.MAIL_FROM_ADDRESS
@@ -102,11 +106,10 @@ class DriverSmtp(object):
             msg['To'] = to_email
 
             # html detect
-            #TODO: this should be better than this, but it's ok for while
             if is_html(body) is True:
                 msg.attach(MIMEText(body, 'html'))
             else:
-                msg.attach(MIMEText(body, 'plain'))
+                msg.attach(MIMEText(body))
 
             self.smtp_client.sendmail(from_email, to_email, msg.as_string(), options)
             self.smtp_client.close()
@@ -132,6 +135,9 @@ class DriverSmtp(object):
 
 
 class TestHTMLParser(HTMLParser):
+
+    def error(self, message):
+        pass
 
     def __init__(self, *args, **kwargs):
         HTMLParser.__init__(self, *args, **kwargs)

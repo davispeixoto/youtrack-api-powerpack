@@ -10,12 +10,7 @@ class SendMail(object):
             self.driver = settings.MAIL_DRIVER
         else:
             self.driver = driver
-        self.configure()
 
-    def send_mail(self, from_email, to_email, subject, body, options=[]):
-            return self.dispatcher.send_mail(from_email, to_email, subject, body, options)
-
-    def configure(self):
         if self.driver == 'smtp':
             from driversemail import DriverSmtp
             self.dispatcher = DriverSmtp()
@@ -25,3 +20,8 @@ class SendMail(object):
             self.dispatcher = DriverMandrill()
         else:
             raise Exception('No mail driver found')
+
+    def send_mail(self, from_email, to_email, subject, body, options=None):
+            if not options:
+                options = []
+            return self.dispatcher.send_mail(from_email, to_email, subject, body, options)
