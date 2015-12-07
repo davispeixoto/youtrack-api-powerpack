@@ -1,3 +1,4 @@
+# coding=utf-8
 __author__ = 'Gabriel Pereira'
 __version__ = '0.1.1'
 

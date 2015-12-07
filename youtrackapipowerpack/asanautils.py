@@ -6,7 +6,7 @@ from datetime import datetime
 __author__ = 'davis.peixoto'
 
 
-class AsanaUtils:
+class AsanaUtils(object):
     asana_client = None
     now = None
     message = None
@@ -19,3 +19,6 @@ class AsanaUtils:
 
     def send_notification(self, asana_id):
         return self.asana_client.stories.create_on_task(asana_id, {'text': self.message})
+
+    def get_task(self, asana_id):
+        return self.asana_client.tasks.find_by_id(asana_id)

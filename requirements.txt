@@ -1,2 +1,5 @@
+html5lib
+pip
+mandrill
 asana
 python-dotenv
