@@ -17,10 +17,25 @@ class GitUtils(object):
         pass
 
     @staticmethod
+    def get_rep_name(project_repository_path):
+        commands = [
+            'cd %s' % project_repository_path,
+            'git remote -v | head -n1 | awk \'{print $2}\' | sed \'s/.*\///\' | sed \'s/\.git//\''
+        ]
+
+        command = ' && '.join(str(c) for c in commands)
+
+        # execute commands
+        proc_get_task_list = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
+        output = proc_get_task_list.stdout.read()
+
+        return output.replace('\n', '')
+
+    @staticmethod
     def get_log(tag_start, tag_end, project_repository_path):
         commands = [
             'cd %s' % project_repository_path,
-            'git log --source --no-merges --pretty=format:"%%aN|%%aE|%%d" %s..%s | grep -E "\\(" | sort | uniq' % (
+            'git log --source --pretty=format:"%%aN|%%aE|%%d" %s..%s | grep -E "\\(" | sort | uniq' % (
                 tag_start, tag_end)
         ]
 
@@ -37,7 +52,7 @@ class GitUtils(object):
         # make command
         commands = [
             'cd %s' % project_repository_path,
-            'git --no-pager log %s..%s --source --no-merges --reverse --decorate=short | grep -o -E "[A-Z]{1,6}-[0-9]{1,6}" | sort | uniq' % (
+            'git --no-pager log %s..%s --source --reverse --oneline --decorate=short | grep -o -E "[A-Z]{1,6}-[0-9]{1,6}" | sort | uniq' % (
                 tag_start, tag_end)
         ]
         command = ' && '.join(str(c) for c in commands)

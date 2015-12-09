@@ -13,6 +13,8 @@ class PowerPackApi(object):
     issue_types_deploy = ['Bug', 'Epic', 'Feature', 'Task']
 
     def __init__(self, args):
+        print ">>> Starting with "
+        print args.action
         self.youtrackUtils = YoutrackUtils()
         self.gitUtility = GitUtils()
         self.asanaUtils = AsanaUtils()
@@ -20,13 +22,17 @@ class PowerPackApi(object):
 
     def load(self, args):
         if args.action[0] == 'deploy':
+            print ">>> Deploying ..."
             if 3 == len(args.action[1:]):
                 self.deploy(args.action[1], args.action[2], args.action[3])
 
     def deploy(self, tag_start, tag_end, project_clone_path):
 
+        repo_name = self.gitUtility.get_rep_name(project_clone_path)
+
         # Notificação de tarefas com branches fora do padrão
-        self.notify_branch_developers(tag_start, tag_end, project_clone_path)
+        self.notify_branch_developers(tag_start, tag_end, project_clone_path, repo_name)
+        print ">>> notify_branch_developers"
 
         # Busca a lista de tarefas
         task_list = self.gitUtility.get_task_branches(tag_start, tag_end, project_clone_path)
@@ -38,10 +44,11 @@ class PowerPackApi(object):
 
         # separa as tarefas que estão verified das que não estão
         issues_verified = [i for i in issues if i.State == 'Verified']
-        issues_not_verified = [i for i in issues if i.State != 'Verified']
+        issues_not_verified = [i for i in issues if i.State != 'Verified' and i.State != 'Deployed']
 
         # envia release notes
-        self.notify_release_notes(issues, tag_end)
+        self.notify_release_notes(issues, tag_end, repo_name)
+        print ">>> notify_release_notes"
 
         # Atualiza o status das que estão verified para Deployed
         for issue in issues_verified:
@@ -50,9 +57,10 @@ class PowerPackApi(object):
                 self.asanaUtils.send_notification(issue.AsanaID)
 
         # # envia e-mail informativo com as issues que não estão com status verified
-        PowerPackApi.notify_to_verify(issues_not_verified, tag_end)
+        PowerPackApi.notify_to_verify(issues_not_verified, tag_end, repo_name)
+        print ">>> notify_to_verify"
 
-    def notify_branch_developers(self, tag_start, tag_end, project_clone_path):
+    def notify_branch_developers(self, tag_start, tag_end, project_clone_path, repo_name):
 
         git_log = self.gitUtility.get_log(tag_start, tag_end, project_clone_path)
 
@@ -61,6 +69,9 @@ class PowerPackApi(object):
         to_email = []
 
         subject = settings.MAIL_BRANCH_VERIFY_SUBJECT
+        subject = str(subject).replace('{{release_tag}}', tag_end)
+        subject = str(subject).replace('{{repo_name}}', repo_name)
+
         emails_cc = str(settings.MAIL_BRANCH_VERIFY_CC).split(';')
         from_email = settings.MAIL_FROM_ADDRESS
 
@@ -88,7 +99,8 @@ class PowerPackApi(object):
             myvars = [
                 {'name': 'developer_name', 'content': developer['name']},
                 {'name': 'branches', 'content': developer['branches_formated']},
-                {'name': 'release_tag', 'content': tag_end}
+                {'name': 'release_tag', 'content': tag_end},
+                {'name': 'repo_name', 'content': repo_name}
             ]
 
             to_email.append({
@@ -125,11 +137,12 @@ class PowerPackApi(object):
         mail_sender = SendMail()
         mail_sender.send_mail(from_email, to_email, subject, '', options)
 
-    def notify_release_notes(self, issues, release_tag):
+    def notify_release_notes(self, issues, release_tag, repo_name):
         issue_types_deploy = ['Bug', 'Epic', 'Feature', 'Task', 'Exception']
 
         subject = settings.MAIL_DEPLOY_SUBJECT
         subject = str(subject).replace('{{release_tag}}', release_tag)
+        subject = str(subject).replace('{{repo_name}}', repo_name)
 
         from_email = settings.MAIL_FROM_ADDRESS
         emails_cc = str(settings.MAIL_DEPLOY_CC).split(';')
@@ -161,11 +174,13 @@ class PowerPackApi(object):
 
                 # add asana data to release note
                 if asana_task is not None:
-                    asana_data = ''.join(str(d) for d in [
-                        '<h4><a href="https://app.asana.com/0/%s/%s" target="_blank">[Asana Task] %s</a></h4>' % (
-                            asana_task['projects'][0]['id'], issue.AsanaID, asana_task['name']),
-                        '<p>%s</p>' % (asana_task['notes'])
-                    ])
+
+                    asana_task_html = [
+                        '<h4><a href="https://app.asana.com/0/%s/%s" target="_blank">[Asana Task] %s</a></h4>' % (str(asana_task['projects'][0]['id']), issue.AsanaID, asana_task['name']),
+                        '<p>%s</p>' % asana_task['notes']
+                    ]
+
+                    asana_data = ''.join(d for d in asana_task_html)
                     self.asanaUtils.send_notification(issue.AsanaID)
 
                 url = issue.youtrack.url + '/issue/' + issue.id
@@ -177,9 +192,9 @@ class PowerPackApi(object):
                 ]
 
                 # adiciona ao release notes os dados da task
-                release_notes.append(''.join(str(i) for i in notes))
+                release_notes.append(''.join(i for i in notes))
 
-        release_notes = '<br />'.join(str(c) for c in release_notes)
+        release_notes = '<br />'.join(c for c in release_notes)
 
         # envia e-mail
         options = {
@@ -187,7 +202,8 @@ class PowerPackApi(object):
             'template_content': [],
             'global_merge_vars': [
                 {'name': 'release_tag', 'content': release_tag},
-                {'name': 'release_notes', 'content': release_notes}
+                {'name': 'release_notes', 'content': release_notes},
+                {'name': 'repo_name', 'content': repo_name}
             ]
         }
 
@@ -195,14 +211,18 @@ class PowerPackApi(object):
         mail_sender.send_mail(from_email, to_email, subject, '', options)
 
     @staticmethod
-    def notify_to_verify(issues, release_tag):
+    def notify_to_verify(issues, release_tag, repo_name):
         to_email = []
         merge_vars = []
         user_tasks = {}
 
+        if len(issues) == 0:
+            return
+
         from_email = settings.MAIL_FROM_ADDRESS
         subject = settings.MAIL_VERIFY_SUBJECT
         subject = str(subject).replace('{{release_tag}}', release_tag)
+        subject = str(subject).replace('{{repo_name}}', repo_name)
         emails_cc = str(settings.MAIL_VERIFY_CC).split(';')
         user = None
 
@@ -229,6 +249,7 @@ class PowerPackApi(object):
                 {'name': 'user_name', 'content': user.fullName},
                 {'name': 'tasks', 'content': '<br/>'.join(str(t) for t in user_task_list)},
                 {'name': 'release_tag', 'content': release_tag},
+                {'name': 'repo_name', 'content': repo_name}
             ]
 
             merge_vars.append({

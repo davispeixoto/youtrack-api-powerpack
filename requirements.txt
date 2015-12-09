@@ -1,5 +1,7 @@
 html5lib
+httplib2
 pip
 mandrill
 asana
 python-dotenv
+urllib2_file

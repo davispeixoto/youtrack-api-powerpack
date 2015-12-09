@@ -79,9 +79,11 @@ class DriverMandrill(object):
                                                                      template_content=template_content, message=message)
 
         except mandrill.Error, e:
+            print result
             return dict(status='NOK', message='[ERROR] Problem to send mail with mandrill : ' + str(e))
 
         else:
+            print result
             return dict(status='OK', message=result)
 
 
