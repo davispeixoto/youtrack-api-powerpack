@@ -185,10 +185,12 @@ class PowerPackApi(object):
 
                 url = issue.youtrack.url + '/issue/' + issue.id
 
+                issue_description = issue.description if hasattr(issue, 'description') else ''
+
                 # add issue to release notes
                 notes = [
                     '<h3><a href="%s"><b># %s - %s</b></a></h3>' % (url, issue.id, issue.summary),
-                    '<p>%s <br /> %s</p>' % (issue.description, asana_data)
+                    '<p>%s <br /> %s</p>' % (issue_description, asana_data)
                 ]
 
                 # adiciona ao release notes os dados da task
