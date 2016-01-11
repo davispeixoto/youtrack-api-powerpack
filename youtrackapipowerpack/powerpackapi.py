@@ -177,7 +177,7 @@ class PowerPackApi(object):
 
                     asana_task_html = [
                         '<h4><a href="https://app.asana.com/0/%s/%s" target="_blank">[Asana Task] %s</a></h4>' % (str(asana_task['projects'][0]['id']), issue.AsanaID, asana_task['name']),
-                        '<p>%s</p>' % asana_task['notes']
+                        '<div>%s</div>' % asana_task['notes']
                     ]
 
                     asana_data = ''.join(d for d in asana_task_html)
@@ -190,7 +190,7 @@ class PowerPackApi(object):
                 # add issue to release notes
                 notes = [
                     '<h3><a href="%s"><b># %s - %s</b></a></h3>' % (url, issue.id, issue.summary),
-                    '<p>%s <br /> %s</p>' % (issue_description, asana_data)
+                    '<div>%s <br /> %s</div>' % (issue_description, asana_data)
                 ]
 
                 # adiciona ao release notes os dados da task
@@ -239,17 +239,19 @@ class PowerPackApi(object):
                 if len([str(c) for c in to_email if user.email in c.values()]) == 0:
                     to_email.append({'email': user.email, 'type': 'to'})
                 if user.email not in user_tasks:
-                    user_tasks[user.email] = []
+                    user_tasks[user.email] = {}
+                    user_tasks[user.email]['tasks'] = []
+                    user_tasks[user.email]['name'] = user.fullName
                 url = issue.youtrack.url + '/issue/' + issue.id
                 issue_link = '<a href="%s">%s</a>' % (url, issue.id)
-                user_tasks[user.email].append(issue_link)
+                user_tasks[user.email]['tasks'].append(issue_link)
 
         # create merge vars for mandrill template with fields: user_name, tasks, release_tag
-        for email, user_task_list in user_tasks.iteritems():
+        for email, user_data in user_tasks.iteritems():
 
             myvars = [
-                {'name': 'user_name', 'content': user.fullName},
-                {'name': 'tasks', 'content': '<br/>'.join(str(t) for t in user_task_list)},
+                {'name': 'user_name', 'content': user_data['name']},
+                {'name': 'tasks', 'content': '<br/>'.join(str(t) for t in user_data['tasks'])},
                 {'name': 'release_tag', 'content': release_tag},
                 {'name': 'repo_name', 'content': repo_name}
             ]
