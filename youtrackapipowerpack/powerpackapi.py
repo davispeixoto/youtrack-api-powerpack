@@ -134,8 +134,8 @@ class PowerPackApi(object):
             'merge_vars': merge_vars
         }
 
-        #mail_sender = SendMail()
-        #mail_sender.send_mail(from_email, to_email, subject, '', options)
+        mail_sender = SendMail()
+        mail_sender.send_mail(from_email, to_email, subject, '', options)
 
     def notify_release_notes(self, issues, release_tag, repo_name):
         issue_types_deploy = ['Bug', 'Epic', 'Feature', 'Task', 'Exception']
@@ -274,6 +274,6 @@ class PowerPackApi(object):
             'template_content': [],
             'merge_vars': merge_vars
         }
-        return
-        #mail_sender = SendMail()
-        #return mail_sender.send_mail(from_email, to_email, subject, '', options)
+
+        mail_sender = SendMail()
+        return mail_sender.send_mail(from_email, to_email, subject, '', options)
